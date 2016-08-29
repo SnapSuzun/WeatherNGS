@@ -92,6 +92,9 @@ class Core
      */
     public function run()
     {
+        if (!isset($_SERVER['REQUEST_URI'])) {
+            return;
+        }
         $controller = $this->_defaultController;
         $action = 'index';
         $params = [];
@@ -270,14 +273,15 @@ class Core
      * @param string $name
      * @param string $value
      * @param null | integer $time
+     * @param string $path
      */
-    public function setCookie($name, $value, $time = null)
+    public function setCookie($name, $value, $time = null, $path = '/')
     {
         if ($time === null) {
             $time = strtotime('+30 days');
         }
 
-        setcookie($name, $value, $time);
+        setcookie($name, $value, $time, $path);
     }
 
     /**

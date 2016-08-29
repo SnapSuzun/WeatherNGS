@@ -74,7 +74,7 @@ class SiteController extends Controller
             throw new \Exception("City not found");
         }
 
-        if (Core::$app->hasCookie('city') && Core::$app->getCookie('city') != $id) {
+        if ((Core::$app->hasCookie('city') && Core::$app->getCookie('city') != $id) || !Core::$app->hasCookie('city')) {
             Core::$app->setCookie('city', $id);
         }
 
@@ -82,11 +82,40 @@ class SiteController extends Controller
 
         $forecasts = WeatherAPI::getForecast($city['alias']);
 
+        $endDate = strtotime('-0 day');
+        $startDate = strtotime('-7 days');
+
+        $historyCursor = Forecast::collection()->find([
+            'links' => [
+                'city' => $city['alias']
+            ],
+            'date' => [
+                '$gt' => new \MongoDate($startDate),
+                '$lte' => new \MongoDate($endDate)
+            ]
+        ]);
+        $history = [];
+        $counter = [];
+        foreach ($historyCursor as $item) {
+            $day = strftime('%A, %d %B', $item['date']->sec);
+            if (!isset($history[$day])) {
+                $history[$day] = 0;
+                $counter[$day] = 0;
+            }
+            $history[$day] += $item['temperature'];
+            $counter[$day]++;
+        }
+
+        foreach ($counter as $key => $value) {
+            $history[$key] /= $value;
+        }
+
         return $this->render('view-city', [
             'currentForecast' => $forecast,
             'forecasts' => $forecasts,
             'city' => $city,
-            'forecastDayCount' => 3
+            'forecastDayCount' => 3,
+            'history' => $history
         ]);
 
     }
@@ -115,7 +144,7 @@ class SiteController extends Controller
 
         foreach ($cities as $city) {
 
-            $forecast = WeatherAPI::getForecast($city['alias']);
+            $forecast = WeatherAPI::getCurrentForecast($city['alias']);
 
             if (isset($forecast['errors'])) {
                 throw new \Exception($forecast['errors']['message']);
@@ -129,8 +158,11 @@ class SiteController extends Controller
             ]);
 
             if ($cursor->count() == 0) {
+                $forecast['date'] = new \MongoDate(strtotime($forecast['date']));
                 Forecast::collection()->save($forecast);
             }
         }
+
+        Core::$app->redirect('/index');
     }
 }

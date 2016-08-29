@@ -4,6 +4,7 @@
 /* @var $forecasts array */
 /* @var $city array */
 /* @var $forecastDayCount integer */
+/* @var $history array */
 
 $this->title = 'Погода в городе ' . $city['name'];
 ?>
@@ -32,5 +33,10 @@ $this->title = 'Погода в городе ' . $city['name'];
                 'error' => $forecasts['errors']
             ]) ?>
         <?php endif; ?>
+    </div>
+    <div class="block">
+        <?= $this->render('_history', [
+            'history' => $history
+        ])?>
     </div>
 </div>

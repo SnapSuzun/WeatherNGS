@@ -61,8 +61,8 @@
     </div>
     <div class="info-main">
         <div class="first-col column">
-            <div>Температура: <?= $forecast['temperature'] ?>°</div>
-            <div>Ощущается: <?= $forecast['feel_like_temperature'] ?>°</div>
+            <div>Температура: <?= $forecast['temperature'] > 0 ? '+' : '' ?><?= $forecast['temperature'] ?>°</div>
+            <div>Ощущается: <?= $forecast['feel_like_temperature'] > 0 ? '+' : '' ?><?= $forecast['feel_like_temperature'] ?>°</div>
             <div><?= ucfirst($forecast['cloud']['title']) . ", " . $forecast['precipitation']['title'] ?></div>
             <div>Ветер: <?= $forecast['wind']['speed'] ?> м/с, <?= $forecast['wind']['direction']['title'] ?></div>
             <div>Атм. давление: <?= $forecast['pressure'] ?> мм</div>

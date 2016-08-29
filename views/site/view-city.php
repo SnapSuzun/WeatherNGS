@@ -1,20 +1,35 @@
 <?php
 /* @var $this \core\View */
-/* @var $forecast array */
+/* @var $currentForecast array */
+/* @var $forecasts array */
 /* @var $city array */
-/* @var $has_errors bool */
+/* @var $forecastDayCount integer */
+
+$this->title = 'Погода в городе ' . $city['name'];
 ?>
 
 <div class="view-city">
     <div class="block">
-        <?php if (!$has_errors): ?>
+        <?php if (isset($currentForecast['forecasts'])): ?>
             <?= $this->render('_currentForecast', [
-                'forecast' => $forecast,
+                'forecast' => array_shift($currentForecast['forecasts']),
                 'city' => $city['name']
             ]) ?>
-        <?php else: ?>
+        <?php elseif (isset($currentForecast['errors'])): ?>
             <?= $this->render('_error', [
-                'error' => $forecast
+                'error' => $currentForecast['errors']
+            ]) ?>
+        <?php endif; ?>
+    </div>
+    <div class="block">
+        <?php if (isset($forecasts['forecasts'])): ?>
+            <?= $this->render('_forecast', [
+                'forecasts' => $forecasts['forecasts'],
+                'dayCount' => $forecastDayCount,
+            ]) ?>
+        <?php elseif (isset($forecasts['errors'])): ?>
+            <?= $this->render('_error', [
+                'error' => $forecasts['errors']
             ]) ?>
         <?php endif; ?>
     </div>

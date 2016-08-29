@@ -7,6 +7,7 @@ use helpers\WeatherAPI;
 use MongoClient;
 use models\City;
 use Core;
+use models\Forecast;
 
 class SiteController extends Controller
 {
@@ -79,18 +80,13 @@ class SiteController extends Controller
 
         $forecast = WeatherAPI::getCurrentForecast($city['alias']);
 
-        $has_errors = false;
-        if (!isset($forecast['errors'])) {
-            $forecast = array_shift($forecast['forecasts']);
-        } else {
-            $forecast = $forecast['errors'];
-            $has_errors = true;
-        }
+        $forecasts = WeatherAPI::getForecast($city['alias']);
 
         return $this->render('view-city', [
-            'forecast' => $forecast,
-            'has_errors' => $has_errors,
-            'city' => $city
+            'currentForecast' => $forecast,
+            'forecasts' => $forecasts,
+            'city' => $city,
+            'forecastDayCount' => 3
         ]);
 
     }
@@ -111,5 +107,30 @@ class SiteController extends Controller
     {
         $result = City::collection()->remove(['_id' => new \MongoId($id)]);
         Core::$app->redirect('/index');
+    }
+
+    public function actionParse()
+    {
+        $cities = City::collection()->find();
+
+        foreach ($cities as $city) {
+
+            $forecast = WeatherAPI::getForecast($city['alias']);
+
+            if (isset($forecast['errors'])) {
+                throw new \Exception($forecast['errors']['message']);
+            }
+
+            $forecast = array_shift($forecast['forecasts']);
+
+            $cursor = Forecast::collection()->find([
+                'links' => ['city' => $city['alias']],
+                'update_date' => $forecast['update_date']
+            ]);
+
+            if ($cursor->count() == 0) {
+                Forecast::collection()->save($forecast);
+            }
+        }
     }
 }
